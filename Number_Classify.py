@@ -1,42 +1,47 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import requests
+import math
+import cmath  # For complex number support
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for all routes
 
+# Function to check if a number is prime.
 def is_prime(n):
-    """Check if a number is prime."""
+
     if n < 2:
         return False
-    for i in range(2, int(n**0.5) + 1):
+    for i in range(2, int(math.isqrt(n)) + 1):
         if n % i == 0:
             return False
     return True
 
+# Function to check if a number is a perfect number.
 def is_perfect(n):
-    """Check if a number is a perfect number."""
+
     if n < 2:
         return False
     divisors = [i for i in range(1, n) if n % i == 0]
     return sum(divisors) == n
 
+# Function to check if a number is an Armstrong number.
 def is_armstrong(n):
-    """Check if a number is an Armstrong number."""
-    digits = [int(d) for d in str(abs(n))]  # Handle negative numbers
+    digits = [int(d) for d in str(abs(n))]  # Handles negative numbers
     num_digits = len(digits)
     return sum(d**num_digits for d in digits) == abs(n)
 
+# Function to calculate the sum of the digits of an input.
 def digit_sum(n):
-    """Calculate the sum of the digits of a number."""
-    return sum(int(d) for d in str(abs(n)))  # Handle negative numbers
+    return sum(int(d) for d in str(abs(int(n))))  # Handles the digit_sum of negative numbers
 
+# Function to determine if a number is odd or even using parity.
 def get_parity(n):
-    """Determine if a number is odd or even."""
-    return "odd" if n % 2 != 0 else "even"
+    return "odd" if int(n) % 2 != 0 else "even"
 
+# Function to retrieve fun_fact for a number from numbersapi.
 def get_fun_fact(n):
-    """Fetch a fun fact about the number from the Numbers API."""
+
     try:
         response = requests.get(f"http://numbersapi.com/{n}")
         if response.status_code == 200:
@@ -45,9 +50,10 @@ def get_fun_fact(n):
         pass
     return f"{n} is an interesting number!"
 
+# API_ENDPOINT to classify a number and return its properties.
 @app.route('/api/classify-number', methods=['GET'])
 def classify_number():
-    """API endpoint to classify a number and return its properties."""
+    
     number = request.args.get('number')
 
     # Validate input
@@ -57,32 +63,39 @@ def classify_number():
             "error": True
         }), 400
 
-    # Check if the input contains alphabetic characters
-    if not number.lstrip('-').isdigit():
-        return jsonify({
-            "number": "alphabet",  # Explicitly return "alphabet" for non-digit inputs
-            "error": True
-        }), 400
+    # Check if the input is a valid number (integer, float, or complex)
+    try:
+        # Try to convert to float first
+        number = float(number)
+    except ValueError:
+        try:
+            # Try to convert to complex number
+            number = complex(number)
+        except ValueError:
+            return jsonify({
+                "number": "invalid",
+                "error": True
+            }), 400
 
-    number = int(number)
-
-    # Determine properties
+    # Determine properties of number
     properties = []
-    if is_armstrong(number):
-        properties.append("armstrong")
-    properties.append(get_parity(number))  # Add parity (odd/even)
+    if isinstance(number, (int, float)) and number == int(number):  # Check if it's an integer
+        number = int(number)
+        if is_armstrong(number):
+            properties.append("armstrong")
+        properties.append(get_parity(number))  # Add parity to find odd/even
 
-    # Prepare response
+    # Json response
     response = {
-        "number": number,
-        "is_prime": is_prime(number),
-        "is_perfect": is_perfect(number),
+        "number": str(number),
+        "is_prime": is_prime(number) if isinstance(number, int) else False,
+        "is_perfect": is_perfect(number) if isinstance(number, int) else False,
         "properties": properties,
-        "digit_sum": digit_sum(number),
+        "digit_sum": digit_sum(number) if isinstance(number, (int, float)) else "N/A",
         "fun_fact": get_fun_fact(number)
     }
 
     return jsonify(response), 200
 
 if __name__ == '__main__':
-    app.run(host= '0.0.0.0', port=5000, debug=True)  # Run the Flask app
+    app.run(host='0.0.0.0', port=5000, debug=True)
