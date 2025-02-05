@@ -5,14 +5,17 @@ This API classifies numbers and provides interesting mathematical properties alo
 
 ## Setup Instructions
 1. **Clone the repository:**
-    ```bash
-    git clone https://github.com/VirusEmp/NUMBER_CLASSIFICATION.git
-    cd NUMBER_CLASSIFICATION
+    
+    git clone https://github.com/VirusEmp/Number_Classification.git
+
+    cd Number_Classification
     
 
 2. **Create and activate  virtual environment and install dependencies:**
     python -m venv venv(name of your virtual environment)
-    ./venv/Scripts/activate
+
+    ./venv/Scripts/activate (to activate the environment)
+
     pip install -r requirements.txt
     
 
